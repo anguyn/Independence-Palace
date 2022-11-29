@@ -1,0 +1,187 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>Tool</title>
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.15/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.15/"></script>
+
+    <script>
+      var map;
+      require([
+        "esri/config",
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/Graphic",
+        "esri/layers/GraphicsLayer",
+        "esri/symbols/PictureMarkerSymbol",
+        "esri/geometry/Circle",
+      ], function (
+        esriConfig,
+        Map,
+        MapView,
+        Graphic,
+        GraphicsLayer,
+        PictureMarkerSymbol,
+        Circle
+      ) {
+        map = new Map({
+          basemap: "topo-vector",
+        });
+
+        var view = new MapView({
+          container: "viewDiv",
+          map: map,
+          center: [106.69561499242047, 10.777174118491043],
+          zoom: 25,
+        });
+
+        view.popup.autoOpenEnabled = false; // Disable the default popup behavior
+        const graphicsLayer = new GraphicsLayer();
+        map.add(graphicsLayer);
+
+        let bridge = [
+          [106.69552545391076, 10.777255241314634],
+          [106.69552703328156, 10.777256907367999],
+          [106.69552861265237, 10.777258573421378],
+          [106.69553019202317, 10.777260239474757],
+          [106.69553177139397, 10.777261905528135],
+          [106.69553335076478, 10.7772635715815],
+          [106.69553493013558, 10.777265237634879],
+          [106.69553650950638, 10.777266903688258],
+          [106.69553808887719, 10.777268569741636],
+          [106.6955491444728, 10.77728023211526],
+          [106.69555072384361, 10.777281898168638],
+          [106.69555230321441, 10.777283564222003],
+          [106.69555388258522, 10.777285230275382],
+          [106.69555546195602, 10.77728689632876],
+          [106.69555704132682, 10.77728856238214],
+          [106.69555862069762, 10.777290228435504],
+          [106.69556020006843, 10.777291894488883],
+          [106.69556177943923, 10.777293560542262],
+
+          [106.69561298076198, 10.777176341687507],
+          [106.6956170040755, 10.777181133911],
+          [106.69562102738902, 10.777185926134479],
+          [106.69562505070255, 10.777190718357971],
+          [106.69562907401607, 10.77719551058145],
+          [106.69563309732959, 10.777200302804943],
+          [106.69563712064311, 10.777205095028421],
+          [106.69564114395664, 10.777209887251914],
+          [106.69564516727016, 10.777214679475392],
+          [106.69564919058368, 10.777219471698885],
+        ];
+        const simpleMarkerSymbol = {
+          type: "simple-marker",
+          color: [226, 119, 40], // Orange
+          outline: {
+            color: [255, 255, 255], // White
+            width: 1,
+          },
+        };
+        for (let i = 0; i < bridge.length; ++i) {
+          let pointGraphicBridge = new Graphic({
+            geometry: {
+              type: "point",
+              longitude: bridge[i][0],
+              latitude: bridge[i][1],
+            },
+            symbol: simpleMarkerSymbol,
+          });
+          graphicsLayer.add(pointGraphicBridge);
+        }
+
+        const circleGeometry = new Circle({
+          center: [106.69595865044882, 10.777646176876724],
+          geodesic: true,
+          numberOfPoints: 100,
+          radius: 50,
+          radiusUnit: "meters",
+        });
+
+        graphicsLayer.add(
+          new Graphic({
+            geometry: circleGeometry,
+            symbol: {
+              type: "simple-fill",
+              style: "none",
+              outline: {
+                width: 3,
+                color: "red",
+              },
+            },
+          })
+        );
+        //------------------------------------------------------------------------------------------
+
+        // Lấy tọa độ 2 điểm để viết phương trình đường thẳng
+        // Lưu ý chọn tọa độ điểm A có xA nhỏ hơn xB
+        let diemA = [106.69561298076198, 10.777176341687506];
+        let diemB = [106.69565321389716, 10.777224263922307];
+        // d (đơn vị mét/ đo được bao nhiêu điền bấy nhiêu) là khoảng cách giữa điểm muốn lấy (điểm M) so với điểm A
+        let d = 43.35;
+
+        // Phương trình đường thẳng đi qua 2 điểm A và B có dạng y = ax + b
+        let a = (diemB[1] - diemA[1]) / (diemB[0] - diemA[0]);
+        let b = diemA[1] - diemA[0] * a;
+
+        for (let x = diemA[0]; x <= diemB[0]; x += (diemB[0] - diemA[0]) / 10) {
+          let y = a * x + b;
+          console.log("[" + x + "," + y + "],");
+        }
+        let kcAB = Math.sqrt(
+          Math.pow(diemB[0] - diemA[0], 2) + Math.pow(diemB[1] - diemA[1], 2)
+        );
+        let t = kcAB / 102.56;
+        d = d * t;
+        let kc = Math.sqrt(Math.pow(diemB[0] - diemA[0], 2));
+        let c = (d * kc) / kcAB;
+        let m1 = diemA[0] + c;
+        let m2 = a * m1 + b;
+        let diemM = [m1, m2];
+        // console.log(diemM);
+
+        //------------------------------------------------------------------------------------------
+
+        view.on("click", function (event) {
+          // Listen for the click event
+          view.hitTest(event).then(function (hitTestResults) {
+            // Search for features where the user clicked
+            if (hitTestResults.results) {
+              view.popup.open({
+                // open a popup to show some of the results
+                location: event.mapPoint,
+                title: "Lat/Long Results",
+                content:
+                  "longitude, latitude: " +
+                  event.mapPoint.longitude +
+                  ", " +
+                  event.mapPoint.latitude,
+              });
+            }
+          });
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
